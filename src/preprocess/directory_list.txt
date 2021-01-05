@@ -1,0 +1,8 @@
+%rootdir
+/path/to/directory/github.com/carushi/PABLO/data/
+%scriptdir
+/path/to/directory/github.com/carushi/PABLO/src/
+%tpmdir
+/path/to/directory/github.com/carushi/PABLO/ref/spm12/tpm/
+%tciadir
+/path/to/directory/github.com/carushi/PABLO/data/nifti/

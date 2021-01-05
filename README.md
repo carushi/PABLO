@@ -22,4 +22,4 @@ Publicly Available Brain image anaLysis tOolkit is a general toolkit for brain M
 
 
 ## Reference
-Kawaguchi R., Takahashi M., Miyake M., Kinoshita M., Ichimura K., Hamamoto R., Narita Y., and Sese J. (to be published)
+Kawaguchi R., Takahashi M., Miyake M., Kinoshita M., Takahashi S., Ichimura K., Hamamoto R., Narita Y., and Sese J. (to be published)
