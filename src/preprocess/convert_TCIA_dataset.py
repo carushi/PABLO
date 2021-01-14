@@ -63,9 +63,6 @@ def convert_directory(idir, odir):
         # if id < 62:
         #     id = id+1
         #     continue
-        # if os.path.exists(os.path.join(odir, new_id)):
-        #     id += 1
-        #     continue
         make_dir(os.path.join(odir, new_id))
         print('id', idir.split('/')[-1], root, odir.split('/')[-1], new_id)
         for source in files:
@@ -74,8 +71,10 @@ def convert_directory(idir, odir):
                 if 'ROI' in prefix:
                     make_roi_nii(os.path.join(idir, root, source), os.path.join(odir, new_id), prefix)
                 else:
-                    pass
                     copy_image_data(os.path.join(idir, root, source), os.path.join(odir, new_id, prefix+'.nii.gz'))
+                    if prefix == 'GD':
+                        copy_image_data(os.path.join(idir, root, source), os.path.join(odir, new_id, 'GT'+'.nii.gz'))
+
         id += 1
 
 def read_directory():
@@ -90,8 +89,6 @@ def read_directory():
 
 if __name__ == '__main__':
     dir = read_directory()
-    # odir = "/Volumes/Extreme 900/Matlab/tcia"
-    # odir = "/Volumes/RisaK_public/tcia"
     if len(sys.argv) > 2:
         input, output = sys.argv[1], sys.argv[2]
         convert_directory(os.path.join(dir, input),os.path.join(dir, output))

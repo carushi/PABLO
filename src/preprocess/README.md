@@ -24,8 +24,16 @@
       * python convert_TCIA_dataset.py original_tcia_gbm tcia_gbm
     *  Convert a start point (S-form and Q-form) for SPM conversion
       * python modify_start_point.py
-      * apply_segmentation_tcga.m
+      * 
 
-## 3. Spatial normalization
-
-* 
+## 3. Spatial normalization and skull-stripping
+* Raw
+  * bash fsl_script.sh '' -1
+  * directory_list_ants.txt
+* SPM
+  * apply_segmentation_tcga.m
+  * directory_list.txtA
+  * bash fsl_script.sh 2w -1
+* ANTs
+  * apply_ants_brain_space.sh
+  * direcotry_list_ants.txt

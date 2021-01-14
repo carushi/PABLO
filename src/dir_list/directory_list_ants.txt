@@ -1,0 +1,5 @@
+ANTS_DIR=/path/to/ants/directory/
+INPUT=/path/to/directory/github.com/carushi/PABLO/data/nifti/tcia_gbm/
+OUTPUT=/path/to/directory/github.com/carushi/PABLO/data/nifti/tcia_gbm/
+SCP=
+SSHDIR=
