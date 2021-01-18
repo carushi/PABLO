@@ -1,0 +1,5 @@
+regexp feature_type
+py[GRADE]_[ID]__s_[METHOD].tsv pyradiomics
+b[GRADE]_[ID]__s_[METHOD].tsv basic
+kbres_[GRADE]_[ID]__s_[METHOD].tsv resnet
+a[GRADE]_[ID]__s2w_[METHOD].tsv tissue
