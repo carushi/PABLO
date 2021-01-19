@@ -1,0 +1,9 @@
+Caudate:0.169054
+Cerebellum:2.52454
+Frontal Lobe:4.07006
+Insula:0.182075
+Occipital Lobe:1.65486
+Parietal Lobe:2.55401
+Putamen:0.173379
+Temporal Lobe:2.3276
+Thalamus:0.223377

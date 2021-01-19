@@ -36,7 +36,7 @@ def get_fsl_atlas(lines):
 
 def get_ann_ratio(roi):
     atlas_name = ["Harvard-Oxford Subcortical Structural Atlas", "MNI Structural Atlas"]
-    hdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../data/ann/")
+    hdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../data/ann/Atlas_annotation/")
     ann_list = []
     prefix = ['har', 'mni']
     files = ["all_harvard_mask.txt", "all_mni_mask.txt"]
