@@ -3,7 +3,14 @@ PABLO (Publicly Available Brain image anaLysis tOolkit) is a general toolkit for
 
 <img src="https://dl.dropboxusercontent.com/s/8tgfklhvrq9qfjn/logo_pablo.png?dl=0mgv0mmx0p0rctvm/logo_catactor.png?dl=0" width="300">
 
+
+
+PABLO is a versatile platform for analyzing combinations of methods consisting of three steps widely usde in MRI analysis; 1) spatial standardization, 2) dimension reduction and 3) classification. Because of the complex input and output, the pipeline is not fully automated. This repository contains the scripts for all steps used in our study. In mini PABLO, which can be downloaded through pip, only the scripts to compute image features are available.
+
+
+
 ## Dependency (not fully)
+
 * FSL
 * NiBabel
 * ANTs
@@ -11,14 +18,6 @@ PABLO (Publicly Available Brain image anaLysis tOolkit) is a general toolkit for
 * pyradiomics
 
 
-
-## Input
-
-* 3D Nifti file
-
-* DICOM file
-
-  
 
 ## Install
 
@@ -37,8 +36,6 @@ The full repository, which can be obtained via a command below, contains the scr
 git clone https://github.com/carushi/PABLO
 ```
 
-
-
 * Scripts for DICOM conversion into Nifti (SPM)
 * Scripts for normalization of image data using SPM and ANTs
 * Scripts for skull stripping in each image
@@ -46,15 +43,28 @@ git clone https://github.com/carushi/PABLO
 * Computation of image features using pyradiomics
 * Construction of classifiers for the data of multiple cohorts
 
-## Image Features 
+## Image Features available in mini PABLO
 * Basic features: 
-   * feature_calc.py
-* Pyradiomic features:
-   * feature_calc.py
+   * Source: feature_calc.py
+   * Option: basic
+* Pyradiomic features
+   * Source: feature_calc.py
+   * Option: py
+   * [Pyradiomics manual](https://pyradiomics.readthedocs.io/en/latest/)
 * Deep learning-based features: Inception-Resnet v2
-   * process_nii.py
-* Anatomical features:
+   * Source: process_nii.py
+   * Additional requirement: keras model
+   * Option: deep
+* Anatomical features
    * feature_calc.py 
+   * Option: ann
+
+## Input
+
+* 3D Nifti file
+* DICOM file
+
+
 
 
 ## Reference

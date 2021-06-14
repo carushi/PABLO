@@ -13,6 +13,7 @@
 ## 2. Inception Resnet v2
 * inception_resnetv2_changed.h5
   * Keras model
+  * Download from https://www.dropbox.com/s/j3qfl0lraeegaus/inception_resnetv2_changed.h5?dl=0
 * Reference
   * [Inception-v4, Inception-ResNet and the Impact of Residual Connections on Learning](https://arxiv.org/abs/1602.07261)
 * Make the list of all files
