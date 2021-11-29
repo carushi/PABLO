@@ -1,3 +1,13 @@
+# Requirement
+* TPM.nii
+ * Download from [https://github.com/spm/spm12](https://github.com/spm/spm12)
+ * tpm/TPM.nii
+ * Place at ann folder
+* priors[1-6].nii.gz
+ * Download from [http://stnava.github.io/ANTs/](http://stnava.github.io/ANTs)
+ * ANTs/template/MICCAI2012-Multi-Atlas-Challenge-Data/Priors2/priors[NUM].nii.gz"
+ * Place at ann folder 
+
 # Training and testing of classifiers
 
 * Train and test classifiers

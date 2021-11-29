@@ -9,6 +9,8 @@ import seaborn as sns
 import sys
 import re
 import math
+from copy import deepcopy
+
 
 from collections import OrderedDict
 from classification_base import *
@@ -16,32 +18,29 @@ from classification_base import *
 from matplotlib import pyplot as plt
 from matplotlib.collections import LineCollection
 import matplotlib.cm as cm
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, accuracy_score, precision_score, recall_score, roc_auc_score
-import scipy.stats as stats
-from scipy.stats import wilcoxon, ranksums
+from scipy.stats import wilcoxon, ranksums, stats
 from scipy.interpolate import RegularGridInterpolator
 import scipy.io as sio
 
 from sklearn import svm
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, accuracy_score, precision_score, recall_score, roc_auc_score
 from sklearn.model_selection import cross_validate
 from sklearn.manifold import TSNE
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import MultiLabelBinarizer, StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.model_selection import StratifiedKFold
-from whitening import *
 from sklearn import linear_model
-from sklearn.ensemble import AdaBoostClassifier
+
+from whitening import *
 import xgboost as xgb
 import nibabel as nib
-from copy import deepcopy
 
 VALIDATION = ['oppose', 'validation', 'both', 'test']
 FVALIDATION = ['both', 'test', 'validation', 'oppose']
-# VALIDATION = ['both', 'oppose']
 
 def plot_corr_features(feature_data, feature_name, sample_name, fname):
     print(feature_data.shape, len(feature_name), len(sample_name))
@@ -76,17 +75,6 @@ def plot_corr_features(feature_data, feature_name, sample_name, fname):
     plt.savefig('corr_' + fname + '_sample.pdf')
     plt.close(fig)
     plt.clf()
-    if False:
-        corr = d.transpose().corr()
-        fig, ax = plt.subplots()
-        cax = ax.imshow(corr, interpolation='nearest')
-        ax.set_yticks(np.arange(0, len(feature_name)))
-        ax.set_yticklabels(feature_name)
-        fig.colorbar(cax, orientation='vertical')
-        plt.show(fig)
-        plt.savefig("corr_" + fname + '_feature.png')
-        plt.close(fig)
-        plt.clf()
     sample_order = plot_dendrogram(d, fname, sample_name)
     return sample_order
 
@@ -95,13 +83,10 @@ def plot_dendrogram(d, gname, index):
     from scipy.cluster.hierarchy import dendrogram, linkage
     import seaborn as sns
     from scipy.spatial.distance import pdist
-    # f, ax = plt.subplots(figsize=(15, 10))
     print(d.head())
     m = d.values
-    # Z = linkage(m, 'ward')
     Z = linkage(pdist(m), method='complete')
     Z[np.isinf(Z)] = 1e+6
-    # fig, axes = plt.subplots()
     dendrogram(
         Z,
         leaf_rotation=90.,  # rotates the x axis labels
@@ -111,8 +96,6 @@ def plot_dendrogram(d, gname, index):
     plt.title('Hierarchical Clustering Dendrogram')
     plt.xlabel('sample index')
     plt.ylabel('distance')
-    # plt.show()
-    # plt.tight_layout()
     plt.savefig(('hclust_' + gname + '.pdf').replace('/', ''))
     plt.close()
     plt.clf()
@@ -120,7 +103,6 @@ def plot_dendrogram(d, gname, index):
         pp = sns.clustermap(d, col_cluster=False,
                             metric='chebyshev', z_score=1)
         _ = plt.setp(pp.ax_heatmap.get_yticklabels(), rotation=0)
-        # plt.tight_layout()
         plt.savefig(('hclust_heat_' +
                      gname + '.pdf').replace('/', ''))
         plt.close()
@@ -152,7 +134,6 @@ def plot_ann_clustering(sample_order, full_annotations, annotation_names, grade_
             plt.clf()
     if count == -1:
         return
-    print(mat)
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.grid(False)
     ax.imshow(mat, interpolation='nearest')
@@ -162,8 +143,6 @@ def plot_ann_clustering(sample_order, full_annotations, annotation_names, grade_
     plt.clf()
 
 def plot_roc(feature, annotation, header):
-    print(annotation)
-    print(feature)
     pos = 1
     index = [i for i in range(len(annotation)) if annotation[i] == annotation[i]]
     tann, tfea = [annotation[i] for i in index], feature[np.array(index)]
@@ -225,7 +204,6 @@ class CentroidConverter:
         func = []
         for j in range(self.map_data.shape[3]):
             x, y, z = self.map_data.shape[0], self.map_data.shape[1], self.map_data.shape[2]
-            # return RegularGridInterpolator((np.linspace(0, dims[0], x), np.linspace(0, dims[1], y), np.linspace(0, dims[2], z)), self.map_data)
             func.append(RegularGridInterpolator((np.linspace(0, dims[0], x), np.linspace(0, dims[1], y), np.linspace(0, dims[2], z)), self.map_data[:,:,:,j]))
         self.map_func = func
         self.dims = dims
@@ -236,7 +214,6 @@ class CentroidConverter:
         if self.map_func is None:
             self.scale_template(dims[0])
         feature_vec, name_vec = [], []
-        # for i, (x, y, z) in enumerate(pos_list):
         for j in range(self.map_data.shape[3]):
             feature_vec.append(self.map_func[j]([[x,y,z] for i, (x, y, z) in enumerate(pos_list)]))
         feature_vec = [x for x in zip(*feature_vec)]
@@ -247,7 +224,6 @@ class CentroidConverter:
 class FeatureExtrcation:
     def __init__(self, arg):
         self.arg = arg
-        # self.resnet_regexp =  arg.res
 
     def read_resnet_data(self, fname, patient, method, grade, validation):
         dir = (self.arg.dir[1] if validation else self.arg.dir[0])
@@ -318,7 +294,6 @@ class FeatureExtrcation:
                         if max(index) >= len(contents):
                             print('Caution: truncated features', fname)
                         return [float(contents[i]) if i < len(contents) else float('nan') for i in index], [name[i] for i in index]
-                        # return contents[1:], name[1:]  # Remove the first element (sample name)
         return [], []
 
     def get_patient_list(self, fname):
@@ -431,86 +406,6 @@ class FeatureExtrcation:
                 count += 1
         return feature_data, grade_list, feature_names, feature_status, feature_lib
 
-class BOVW:
-    def __init__(self):
-        pass
-
-    def bovw_clustering(self, dictionary_size, training_set, feat_ext):
-        BOW = cv2.BOWKMeansTrainer(dictionary_size)
-        for p in training_set:
-            feature = feat_ext.read_feature_data(p)
-            BOW.add(dsc)
-        dictionary = BOW.cluster()
-        return dictionary
-
-    def bovw_training(self, feature_dict, ann_dict, training_set, read_feature_data):
-        train_label = [ann_dict[p] for p in training_set]
-        train_feature = [read_feature_data(p) for p in training_set]
-        print("svm items", len(train_feature), len(train_feature[0]))
-        svm = cv2.ml.SVM_create()
-        svm.train(np.array(train_feature), np.array(train_label))
-        svm.predict_all()
-        svm.save('temp.model')
-        return svm
-
-
-    def bovw_test(self, svm, ann_dict, test_set, read_feature_data):
-        def classify(p):
-            feature = read_feature_data(p)
-            pred = svm.predict(feature)
-            confusion[ann_dict[p], pred] = confusion[ann_dict[p], pred] + 1
-        confusion = np.zeros((2, 2))
-        for p in test_set:
-            classify(p)
-        confusion = normalize_rows(confusion)
-        confusion = confusion.transpose()
-        print(confusion)
-
-    def bovw_training_data(self, X, Y, dict_size=10):
-        global SEED
-        kmeans = KMeans(n_lusters=dict_size, random_state=SEED).fit(X)
-        kmeans.cluster_centers
-
-    def bovw_training_data(self, X, Y, dict_size=10):
-        def extractor(x):
-            return x.astype(np.float32)
-        BOW = cv2.BOWKMeansTrainer(dict_size)
-        for x in X:
-            BOW.add(x.astype(np.float32))
-        codebook = BOW.cluster()
-        bow_ext = cv2.BOWImgDescriptorExtractor(extractor, cv2.BFMatcher(cv2.NORM_L1))
-        bow_ext.setVocabulary(codebook)
-        def feature_bow(fn):
-            return bow_extract.compute(fn, detect.detect(fn))
-        print(codebook)
-        bow_ext.compute()
-        svm = cv2.ml.SVM_create()
-        svm.train([feature_bow(x) for x in X], cv2.ml.ROW_SAMPLE, Y)
-        def predict(fn):
-            f = feature_bow(fn)
-            p = svm.predict(f)
-            print(fn, "\t", p[1][0][0])
-        return(svm, bow_ext)
-        # matcher = cv2.BFMatcher()
-        # matcher.knnMatch()
-        # bowExtractor = cv2.BOWImgDescriptorExtractor(detector, matcher)
-        # svm = cv2.ml.SVM_create()
-        # svm.setType(cv2.ml.SVM_C_SVC)
-        # svm.setC(2)
-        # svm.setKernel(cv2.ml.SVM_RBF)
-        # svm.train(np.array(X).astype(np.float32), cv2.ml.ROW_SAMPLE, np.array(Y))
-        # return svm
-
-    def bovw_test_data(self, svm, bow_ext, X):
-        # print(X.shape, X)
-        # lb = MultiLabelBinarizer()
-        # pred = [svm.predict(x.reshape(1, len(x)).astype(np.float32)) for x in X]
-        # lb.fit(pred)
-        # return lb.inverse_transform(pred)
-        # return lb.transform([svm.predict(x.reshape(1, len(x)).astype(np.float32)) for x in X])
-        return [svm.predict(bow_ext.compute(x, detect.detect(x))) for x in X]
-        # return [svm.predict(x.reshape(1, len(x)).astype(np.float32)) for x in X]
-
 
 class Annotation:
     def __init__(self, names, vnames=None):
@@ -578,30 +473,12 @@ class Annotation:
         return data
 
     def get_positive_negative_matrix(self, afname, names=None):
-        global ANN_TYPE
         if names is None:
             names = self.names
-        if ANN_TYPE == '1st_gen':
-            return self.get_positive_negative_matrix_first(afname, names)
-        else:
-            return self.get_positive_negative_matrix_second(afname, names)
+        return self.get_positive_negative_matrix(afname, names)
 
-    def get_positive_negative_matrix_first(self, afname, names):
-        ann_name, data, annotated_patient = self.read_ann_data(afname)
-        mat = np.repeat(np.nan, len(self.keys)*len(names)).reshape((len(self.keys), len(names)))
-        dict = {'CpG':'16CpG', 'MGMT':'16CpG', 'MGMT_LGG':'16CpG', 'IDH_GBM':'IDH1_2', 'TERT_GBM':'TERT', 'TERT_LGG':'TERT'}
-        for i, key in enumerate(self.keys):
-            if key == 'GBM' and key not in ann_name:
-                mat[i,:] = [1 if 'gbm' in names[i] else 0 if 'glioma' in names[i] else float('nan') for i in range(len(names))]
-            else:
-                column = (key if key not in dict else dict[key])
-                if column not in ann_name:
-                    continue
-                mat[i,:] = [self.set_threshold_first(key, data[ann_name.index(column)], annotated_patient, patient) for patient in names]
-        print(mat)
-        return mat, self.keys
 
-    def get_positive_negative_matrix_second(self, afname, names):
+    def get_positive_negative_matrix(self, afname, names):
         ann_name, data, annotated_patient = self.read_ann_data(afname)
         mat = np.repeat(np.nan, len(self.keys)*len(names)).reshape((len(self.keys), len(names)))
         dict = {'GBM':['Diag'], 'CpG':['16CpG'], 'MGMT':['16CpG'], 'IDH1_2':['IDH1/2'], 'Group A':['Group'], 'Group B':['Group'], 'Group C':['Group'], 'Group D':['Group'], \
@@ -616,7 +493,7 @@ class Annotation:
                     if c not in ann_name:
                         break_flag = True
                 if not break_flag:
-                    mat[i,:] = [self.set_threshold_second(key, [data[ann_name.index(c)] for c in column], annotated_patient, patient) for patient in names]
+                    mat[i,:] = [self.set_ann_threshold(key, [data[ann_name.index(c)] for c in column], annotated_patient, patient) for patient in names]
         print(names[0])
         if 'tcia' in names[0]:
             mat = self.fill_group(mat)
@@ -639,51 +516,7 @@ class Annotation:
                 mat[i,:] = [1 if mat[idh,j] == 0 and mat[tert,j] == 1 else 0 for j in range(mat.shape[1])]
         return mat
 
-    def set_threshold_first(self, key, vector, annotated_patient, patient):
-        global ANN_TYPE
-        assert ANN_TYPE == '1st_gen'
-        index = annotated_patient.index(patient)
-        if vector[index] == 'NA' or len(vector[index]) == 0:
-            return float('nan')
-        if key == 'CpG':
-            if float(vector[index]) > 0.0: return 1
-        elif key == '16CpG':
-            if float(vector[index]) > 16.0: return 1
-        elif key == 'IDH1_2':
-            if vector[index] != 'wt': return 1
-        elif key == 'TERT':
-            if vector[index] != 'wt': return 1
-        elif key == '1p19q':
-            if vector[index] != 'no loss': return 1
-        elif key == 'MGMT':
-            if 'glioma' in patient:
-                return float('nan')
-            if float(vector[index]) > 16.0: return 1
-        elif key == 'MGMT_LGG':
-            if 'gbm' in patient:
-                return float('nan')
-            if float(vector[index]) > 16.0: return 1
-        elif key == 'IDH_GBM':
-            if 'glioma' in patient:
-                return float('nan')
-            if vector[index] != 'wt': return 1
-        elif key == 'IDH_LGG':
-            if 'gbm' in patient:
-                return float('nan')
-            if vector[index] != 'wt': return 1
-        elif key == 'TERT_GBM':
-            if 'glioma' in patient:
-                return float('nan')
-            if vector[index] != 'wt': return 1
-        elif key == 'TERT_LGG':
-            if 'gbm' in patient:
-                return float('nan')
-            if vector[index] != 'wt': return 1
-        return 0
-
-    def set_threshold_second(self, key, vector, annotated_patient, patient):
-        global ANN_TYPE
-        assert ANN_TYPE == '2nd_gen'
+    def set_ann_threshold(self, key, vector, annotated_patient, patient):
         index = annotated_patient.index(patient)
         for c in range(len(vector)):
             if vector[c][index] == 'NA' or len(vector[c][index]) == 0:
@@ -908,8 +741,6 @@ class SupervisedClassification:
                 tprs[-1][0] = 0.0
                 roc_auc = auc(fpr, tpr)
                 aucs.append(roc_auc)
-                # plt.plot(fpr, tpr, lw=1, alpha=0.3,
-                #          label='ROC fold %d (AUC = %0.2f)' % (j, roc_auc))
                 plt.plot(fpr, tpr, lw=1, alpha=0.3,
                          label='')
             plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',
@@ -996,11 +827,9 @@ class SupervisedClassification:
 
     def multi_dim_classification_lasso(self, header, plot_prefix=''):
         global SEED
-        # clf = linear_model.Lasso(alpha=0.1)
         try:
             for c in [1.0, 0.5, 0.1]:
                 clf = linear_model.LogisticRegression(penalty='l1', C=c, solver='liblinear', random_state=SEED)
-                # clf = linear_model.LogisticRegression(penalty='l1', C=c)
                 if self.valid:
                     clf.fit(self.X, self.Y)
                     self.test_validation_set('lasso'+str(c), header, clf, plot_prefix)
@@ -1015,7 +844,6 @@ class SupervisedClassification:
     def multi_dim_classification_svm(self, header, plot_prefix=''):
         global SEED
         clf = svm.SVC(kernel='rbf', probability=True, random_state=SEED, gamma='auto')
-        # clf = svm.SVC(kernel='rbf', probability=True, random_state=SEED)
         try:
             if self.valid:
                 clf.fit(self.X, self.Y)
@@ -1053,8 +881,6 @@ class SupervisedClassification:
         try:
             if self.valid:
                 clf.fit(self.X, self.Y)
-                # coef = clf.coef_
-                # print('coef', coef)
                 self.test_validation_set('rf', header, clf, plot_prefix)
             else:
                 cv_results = cross_validate(
@@ -1071,8 +897,6 @@ class SupervisedClassification:
         try:
             if self.valid:
                 clf.fit(self.X, self.Y)
-                # coef = clf.coef_
-                # print('coef', coef)
                 self.test_validation_set('ab', header, clf, plot_prefix)
             else:
                 cv_results = cross_validate(
@@ -1084,7 +908,6 @@ class SupervisedClassification:
 
     def multi_dim_classification_xgb(self, header, plot_prefix=''):
         global SEED
-        # try:
         xgb_params = {
             'objective': 'binary:logistic',
             'eval_metric': 'logloss',
@@ -1099,9 +922,6 @@ class SupervisedClassification:
         else:
             cv_results, _ = self.cross_validation_xgb(clf, self.X, self.Y)
             self.print_result('xgb', header, cv_results)
-        # except Exception as e:
-        #     print(self.Y, self.vy)
-        #     print(e)
 
     def cross_validation_xgb(self, clf, x, y):
         cv_results = {'test_roc_auc':[], 'test_precision':[], 'test_recall':[], 'test_accuracy':[]}
@@ -1137,22 +957,8 @@ class SupervisedClassification:
                 y, train_index), np.take(y, test_index)
             yield X_train, X_test, Y_train, Y_test
 
-    def bovw_classification(self, header):
-        bovw = BOVW()
-        for X_train, X_test, Y_train, Y_test in self.sep_data():
-            svm. bow_ext = bovw.bovw_training_data(X_train, Y_train)
-            Y_pred = bovw.bovw_test_data(svm, bow_ext, X_test)
-            print('test', Y_test)
-            print('pred', Y_pred)
-            precision, recall, _, _ = precision_recall_fscore_support(
-                Y_test, Y_pred, pos_label=1, average='binary')
-            prec_list.append(precision)
-            recall_list.append(recall)
-        print('bovw_svm', header, np.mean(prec_list), np.std(
-            prec_list), np.mean(recall_list), np.std(recall_list))
 
     def comp_pvalue(self, X_train, Y_train):
-        # T, pvalue = wilcoxon([x for i, x in enumerate(X_train) if Y_train[i] == 1], [x for i, x in enumerate(X_train) if Y_train[i] == 0])
         T, pvalue = ranksums([x for i, x in enumerate(X_train) if Y_train[i] == 1], [x for i, x in enumerate(X_train) if Y_train[i] == 0])
         return pvalue
 
@@ -1212,7 +1018,6 @@ def comp_MDS(samples, n_comp=2):
     pos = mds.fit_transform(similarities)
     return pos, similarities
 
-
 def feature_clustering(samples, names, feature_name, gname):
     d = pd.DataFrame(data=samples, columns=feature_name, index=names)
     corr = d.corr()
@@ -1221,23 +1026,6 @@ def feature_clustering(samples, names, feature_name, gname):
 def feature_label_map_valid(samples, names, ann, feature_name, vsamples, vnames, vann, prefix=''):
     iann = np.hstack((ann, vann))
     feature_label_map(np.vstack((samples, vsamples)), names+vnames, iann, feature_name, prefix=prefix+'_valid_')
-
-def compare_two_datasets(samples, names, ann, feature_name, vsamples, vnames, vann, prefix=''):
-    # from pyvttbl import DataFrame
-    for i, f in enumerate(feature_name):
-        # stat, pval = mannwhitneyu()
-        # formula = 'len ~ C(supp) + C(dose) + C(supp):C(dose)'
-        # model = ols(formula, data).fit()
-        # aov_table = anova_lm(model, typ=2)
-        # eta_squared(aov_table)
-        # omega_squared(aov_table)
-        # print(aov_table)
-        pass
-        # df=DataFrame()
-        # df.read_tbl(datafile)
-        # df['id'] = xrange(len(df['len']))
-        # print(df.anova('len', sub='id', bfactors=['supp', 'dose']))
-
 
 def feature_label_map(samples, names, ann, feature_name, prefix=''):
     global FEATURE
@@ -1260,11 +1048,6 @@ def feature_label_map(samples, names, ann, feature_name, prefix=''):
                 index, marker, lprefix = [i for i in range(len(ann[i,:])) if 'tcia' in names[i]], 'x', 'TCIA'
             if key == 'GBM':
                 cmap = cm.get_cmap('viridis')
-                # color_list = [cm.get_cmap('viridis')(x) for x in range(cmap.N)]
-                # color_list = [tuple([x for x in c]) for c in color_list]
-                # color_list = [tuple(list(c[0:3])+[1.0]) for c in color_list]
-                # color_list = [color_list[min(len(color_list)-1, int(i*len(color_list)/4))+3] for i in range(4)]
-                # color_list = ['b', 'gray', 'b', 'gray']
                 color_list = ['red', 'black', 'red', 'black']
                 if h == 0:
                     index_set.append({'data':[j for j, a in enumerate(ann[i,:]) if a == 1 and j in index], 'color':color_list[0:1], 'marker':marker, 'label': str(lprefix+'_'+'+')})
@@ -1280,7 +1063,6 @@ def feature_label_map(samples, names, ann, feature_name, prefix=''):
                     index_set.append({'data':[j for j, a in enumerate(ann[i,:]) if a == 0 and ann[0,j] == 0 and j in index], 'color':'gray', 'marker':marker, 'label': str(lprefix+'_LrGG_'+'-')})
         for l in [100, 200, 500, 1000]:
             tsne = TSNE(n_components=2, learning_rate=l).fit_transform(normalize_row_col_mat(d.loc[:, :]))
-            # tsne = TSNE(n_components=2, learning_rate=l).fit_transform(remove_nan(d.loc[:, :]))
             fig, ax = plt.subplots()
             for index in index_set:
                 if key == 'GBM':
@@ -1326,14 +1108,13 @@ def check_not_enough_positives(data, cv, header=''):
         return False
 
 
-def supervised_classification(samples, label, key, feature_name, header, bovw_flag=False, vx=None, vy=None, auc=False, plot_prefix='', divide=False, gbm=False):
+def supervised_classification(samples, label, key, feature_name, header, vx=None, vy=None, auc=False, plot_prefix='', divide=False, gbm=False):
     global FEATURE
     print('# classification...')
     print(key, label.shape)
     original_index = np.where(label == label)[0]
     max_len = len(label)
     print('Data and annotation dimension:', [x for x in np.unique(label) if x == x], len(label), samples.shape)
-    print(original_index)
     sys.stdout.flush()
     if len(original_index) == 0:
         return
@@ -1363,10 +1144,6 @@ def supervised_classification(samples, label, key, feature_name, header, bovw_fl
     sys.stdout.flush()
     sup.multi_dim_classification_svm(header, plot_prefix)
     sys.stdout.flush()
-    # if key == 'CpG' or key == '16CpG' or key == 'TERT':
-    #     return
-    #     sup.multi_dim_classification_imbalanced_svm(header)
-    #     sup.multi_dim_classification_imbalanced_svm_sampling(header)
 
 def feature_filtering(data, samples, label, key, feature_name, header, vx=None, vy=None, auc=False, plot_prefix='', divide=False, gbm=False):
     print('# classification...')
@@ -1444,10 +1221,8 @@ class Dataset:
     def apply_filtering(self, prefix):
         index = [i for i, s in enumerate(np.sum(self.feature_data, axis=1)) if s == 0.]
         index = list(set(index+[i for i, s in enumerate(np.var(self.feature_data, axis=1)) if s == 0.]))
-        print(len(index))
         self.remove_index(index)
         index = remove_colinear(remove_nan(self.feature_data))
-        print(len(self.feature_names)-len(index))
         self.remove_index(index, True)
         self.feature_data = histogram_normalization(self.feature_data)
         print(self.feature_data.shape)
@@ -1954,11 +1729,6 @@ def dimension_reduction(method, data, arg):
                         print(all_pos[0].shape, n_comp, len(all_pos))
                         header = method+'_' + str(n_comp) + '_' + str(sp) + '_' + FEATURE[ann] + filt + '_' + validation
                         plot_prefix = arg.output+('_post' if arg.post else '')
-                        # if validation in ['both', 'oppose']:
-                        #     print("Dimensions", all_pos[0].shape, all_pos[1].shape, data.full_annotations[ann,:].shape, data.valid_annotations[ann,:].shape)
-                        # else:
-                        #     print("Dimensions", all_pos[0].shape, data.full_annotations[ann,:].shape)
-                        # continue
                         if validation == 'both':
                             supervised_classification(all_pos[0], data.full_annotations[ann,:], FEATURE[ann], feat_names,
                                                       header, vx=all_pos[1], vy=data.valid_annotations[ann,:], auc=arg.auc, plot_prefix=plot_prefix, gbm=arg.gbm)
@@ -1985,13 +1755,6 @@ def get_matrix_data(method, data, validation, n_comp, sp, filt, n_comp_list=[], 
         with open(temp, mode='wb') as f:
             pickle.dump(all_pos, f)
         print('method', method, n_comp, n_comp_list)
-        # if method == 'PCA' and n_comp == max(n_comp_list):
-        #     if (type(sp) == int and sp == -1) or sp == 'all': #compress all feature matrices
-        #         for n in n_comp_list:
-        #             new_pos = [m[:,0:min(min(m.shape), n*4)-post_features] for m in all_pos]
-        #             ttemp = method+'_'+validation+'_'+str(n)+'_'+str(sp)+'_'+filt+data.arg.output+('_post' if post else '')+'.pyn'
-        #             with open(ttemp, mode='wb') as f:
-        #                 pickle.dump(new_pos, f)
     feat_names = [["PC" + '_' + str(i) for i in range(pos.shape[1])] for pos in all_pos]
     return all_pos, feat_names
 
@@ -2044,27 +1807,6 @@ def scikit_survival(data):
     print('knn'+str(k), header, cv_results['test_accuracy'].mean(), cv_results['test_accuracy'].std(),
           cv_results['test_precision'].mean(), cv_results['test_recall'].mean())
 
-def lifeline_regression(data):
-    merge_annotations() #Death + longevity
-    from lifelines import AalenAdditiveFitter, CoxPHFitter
-    from lifelines.datasets import load_regression_dataset
-    from lifelines.utils import k_fold_cross_validation
-
-    df = load_regression_dataset()
-
-    #create the three models we'd like to compare.
-    aaf_1 = AalenAdditiveFitter(coef_penalizer=0.5)
-    aaf_2 = AalenAdditiveFitter(coef_penalizer=10)
-    cph = CoxPHFitter()
-
-    print(np.mean(k_fold_cross_validation(cph, df, duration_col='T', event_col='E')))
-    print(np.mean(k_fold_cross_validation(aaf_1, df, duration_col='T', event_col='E')))
-    print(np.mean(k_fold_cross_validation(aaf_2, df, duration_col='T', event_col='E')))
-
-def survival_analysis(data):
-    death_duration = get_survival_time()
-    lifeline_regression()
-    scikit_survival()
 
 def get_sp_range():
     return ['resnet', 'basic', 'pyradiomics', 'annotation', 'tissue', 'all']
@@ -2086,8 +1828,6 @@ def feature_based_classification(arg):
         if write_validation and len(arg.pfile) > 1: data.write_valid_dataset(arg.output)
         if write_ann:               data.write_annotations(arg.output)
     data.load_dataset(arg.ann_feature, arg.filter, (not (arg.raw or arg.clust) and arg.post))
-    if arg.life:
-        lifeline_regression(data)
     if arg.clust:
         feature_and_ann_clustering(data, arg.ann_pred)
     if arg.filter:
@@ -2097,9 +1837,7 @@ def feature_based_classification(arg):
             if ann != int(arg.sp):
                 continue
             for sp in (['annotation'] if arg.ann_pred else ['all']):
-            # for sp in get_sp_range(arg.sp, feature_group):
                 cindex = data.get_cindex_tag_based([sp], '')
-                # if sp == 'all' and (not arg.fisher):
                 _, _ = read_pvalue_based_features(ann, cindex, data, arg.output, ('' if sp == 'all' else '_'+sp))
                 all_pos = [data.feature_data[:,cindex]]
                 if data.valid_data is not None:
