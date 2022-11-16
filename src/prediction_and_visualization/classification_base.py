@@ -19,6 +19,7 @@ CV = 10 # Cross validation
 AUROC = True # pvalue or auroc
 SPMTEMP = "../ann/TPM.nii"
 ANTSTEMP = "../ann/priors[NUM].nii.gz"
+ANN_DIR = "../ann/"
 SCALE = True
 
 

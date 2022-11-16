@@ -25,6 +25,7 @@ Pip install is coming soon to compute image features from Nifti image.
 
 ```
 pip install PABLO
+
 ```
 
 
@@ -68,4 +69,4 @@ git clone https://github.com/carushi/PABLO
 
 
 ## Reference
-Kawaguchi RK., Takahashi M., Miyake M., Kinoshita M., Takahashi S., Ichimura K., Hamamoto R., Narita Y., and Sese J. (to be published)
+Kawaguchi RK, Takahashi M, Miyake M, Kinoshita M, Takahashi S, Ichimura K, Hamamoto R, Narita Y, Sese J. Assessing Versatile Machine Learning Models for Glioma Radiogenomic Studies across Hospitals. <i>Cancers (Basel)</i>. 2021 Jul 19;13(14):3611. doi: 10.3390/cancers13143611. PMID: 34298824; PMCID: PMC8306149.
