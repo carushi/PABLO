@@ -1,0 +1,10 @@
+ID,Dataset,Diag,16CpG,IDH1/2,Group,TERT,1p19q,Age_n,Sex,KPS_n
+1,NCC,GBM,0.0,wt,A,Yes,no loss,10,F,50
+2,NCC,GBM,17.0,Yes,B,wt,no loss,20,F,60
+3,NCC,glioma,16.0,Yes,C,Yes,co-del,60,M,100
+4,NCC,glioma,0.3,Yes,D,wt,no loss,50,F,90
+5,TCIA,GBM,0.0,wt,A,Yes,NA,40,M,80
+6,TCIA,GBM,0.5,wt,B,wt,co-del,30,F,70
+7,TCIA,GBM,0.3,Yes,B,wt,no loss,40,M,20
+8,TCIA,glioma,0.2,Yes,C,Yes,co-del,50,F,100
+9,TCIA,glioma,16.0,Yes,D,wt,co-del,30,M,50

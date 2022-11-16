@@ -571,11 +571,11 @@ class SupervisedClassification:
             self.valid = True
 
     def divide_test_set(self, key):
-        global SEED
+        global SEED, ANN_DIR
         print(key)
         fname = "ann_ncc_test_validation_"+key+".txt"
         # print(fname)
-        full_path = os.path.join("/Users/cawa/Research/GBM/script/ncc_pipeline/test/ann/", fname)
+        full_path = os.path.join(ANN_DIR, fname)
         if not os.path.exists(full_path):
             skf = StratifiedKFold(n_splits=2, random_state=SEED, shuffle=True)
             for train_index, test_index in skf.split(self.vx, self.vy):
