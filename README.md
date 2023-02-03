@@ -24,7 +24,7 @@ PABLO is a versatile platform for analyzing combinations of methods consisting o
 Pip install is coming soon to compute image features from Nifti image.
 
 ```
-pip install PABLO
+pip install PABLO-MRI
 
 ```
 
